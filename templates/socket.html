@@ -63,7 +63,6 @@
             });
 
             socket.on('logged_in', () => {
-                addMessage("Server", "You are now logged in.")
                 $('#send-msg-btn').prop('disabled', false).on('click', (e) => {
                     e.preventDefault();
                     sendMessage();

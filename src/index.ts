@@ -1,19 +1,21 @@
-import { Swan, Route, HTTPRoute, SocketRoute, IServerOptions, ISocketOptions } from 'swan-server';
+import { Swan, Route, HTTPRoute, SocketRoute, ISocketOptions } from 'swan-server';
 import { IndexView } from './views/IndexView';
 import { SessionView } from './views/SessionView';
 import { SocketView } from './views/SocketView';
-import { SocketLoginView } from './views/SocketLoginView';
-import { SocketMessageView } from './views/SocketMessageView';
+import { SocketMessageView, SocketLoginView } from './views/SocketMessageView';
 
-const routes: Route[] = [
+const swan = new Swan();
+
+/* Swan has an HTTP server and a socket server. You can use either one or both */
+
+/* Start HTTP Server */
+const HTTPRoutes: HTTPRoute[] = [
     new HTTPRoute('/', 'index', new IndexView()),
     new HTTPRoute('/session', 'session', new SessionView()),//remove name from HTTPRoute initializer
-    new HTTPRoute('/socket', 'socket', new SocketView()),
-    new SocketRoute('login', new SocketLoginView()),
-    new SocketRoute('message', new SocketMessageView()) // need to expose IO to views
+    new HTTPRoute('/socket', 'socket', new SocketView())
 ]
-
-const serverOptions: IServerOptions = {
+swan.startHTTPServer({
+    routes: HTTPRoutes,
     sessionOptions: {
         cookieName: `session`,
         secret: 'sflswefweirwrkjf8w08u34rg',
@@ -21,17 +23,23 @@ const serverOptions: IServerOptions = {
         activeDuration: 1000 * 60 * 5
     },
     PORT: 3000 
-}
+})
+.catch(err => {
+    console.error(`Unable to start  HTTP server: ${err}`);
+})
 
-const socketOptions: ISocketOptions = { // update config so origins can be set
+/* Start Socket Server */
+const socketRoutes: SocketRoute[] = [
+    new SocketRoute('login', new SocketLoginView()),
+    new SocketRoute('message', new SocketMessageView())
+]
+const socketOptions: ISocketOptions = {
+    routes: socketRoutes,
+    origins: "*:*",
     PORT: 2222
 } 
 
-const swan = new Swan(routes, serverOptions, socketOptions);
-swan.start()
-.then(() => {
-    console.log('Server is Running')
-})
-.catch(err => {
-    console.error(`Unable to start game: ${err}`);
-})
+swan.startSocketServer(socketOptions)
+    .catch(err => {
+        console.error(`Unable to start socket server: ${err}`);
+    })

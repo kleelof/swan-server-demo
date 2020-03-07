@@ -1,15 +1,15 @@
-import { SocketView } from 'swan-server';
-import { Socket } from 'socket.io'; // extend this in SwanServer
+import { ISocketView } from 'swan-server';
+import { Socket, Server } from 'socket.io';
 
 interface IData {
     username: string
 }
 
-export class SocketLoginView extends SocketView {
+export class SocketLoginView implements ISocketView {
     
-    public processRequest = (socket: Socket, data: IData, fn: (data: {}) => {}): void =>{
+    public processRequest = (socket: Socket, data: IData, io: Server): void =>{
         socket['username'] = data.username;
-        socket.broadcast.emit('server_message', {message: `${data.username} has joined the chat.`});
+        io.emit('server_message', {message: `${data.username} has joined the chat.`});
         socket.emit('logged_in');
     }
 }
